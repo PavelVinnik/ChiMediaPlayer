@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.SeekBar;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -16,6 +17,8 @@ public class PlayerFragment extends Fragment {
 
     private Context mContext;
     private Intent mPlayerServiceIntent;
+
+    private SeekBar mPlayerSeekBar;
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -33,6 +36,7 @@ public class PlayerFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_player, container, false);
+        mPlayerSeekBar = view.findViewById(R.id.playerSeekBar);
         Button playButton = view.findViewById(R.id.playButton);
         playButton.setOnClickListener(new View.OnClickListener() {
             @Override
