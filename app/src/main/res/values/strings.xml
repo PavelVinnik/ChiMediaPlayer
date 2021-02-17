@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">ChiMediaPlayer</string>
+    <string name="play_text">Play</string>
+    <string name="pause_text">Pause</string>
+    <string name="stop_text">Stop</string>
+    <string name="next_text">Next</string>
+    <string name="previous_text">Previous</string>
 </resources>
