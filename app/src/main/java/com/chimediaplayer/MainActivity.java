@@ -17,6 +17,5 @@ public class MainActivity extends AppCompatActivity {
                     .replace(R.id.container_main, PlayerFragment.newInstance())
                     .commit();
         }
-
     }
 }
