@@ -72,7 +72,9 @@ public class PlayerService extends Service {
                 break;
             }
             case PAUSE_ACTION: {
-                mMediaPlayer.pause();
+                if (mMediaPlayer.isPlaying()) {
+                    mMediaPlayer.pause();
+                }
                 break;
             }
             case STOP_ACTION: {
