@@ -5,4 +5,5 @@
     <string name="stop_text">Stop</string>
     <string name="next_text">Next</string>
     <string name="previous_text">Previous</string>
+    <string name="notification_channel_text">My channel</string>
 </resources>

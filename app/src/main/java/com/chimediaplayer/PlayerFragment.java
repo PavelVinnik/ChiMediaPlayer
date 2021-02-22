@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.SeekBar;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -22,6 +23,8 @@ public class PlayerFragment extends Fragment {
 
     private Intent mPlayerServiceIntent;
 
+    private TextView mPositionTextView;
+    private TextView mDurationTextView;
     private SeekBar mPlayerSeekBar;
 
     private BroadcastReceiver mPlayerReceiver;
@@ -36,10 +39,12 @@ public class PlayerFragment extends Fragment {
                 switch (intent.getAction()) {
                     case PlayerService.ACTION_SEND_TRACK_DURATION: {
                         mPlayerSeekBar.setMax(intent.getIntExtra(PlayerService.DURATION_EXTRA, 0));
+                        mDurationTextView.setText(String.valueOf(intent.getIntExtra(PlayerService.DURATION_EXTRA, 0)));
                         break;
                     }
                     case PlayerService.ACTION_SEND_TRACK_POSITION: {
                         mPlayerSeekBar.setProgress(intent.getIntExtra(PlayerService.POSITION_EXTRA, 0));
+                        mPositionTextView.setText(String.valueOf(intent.getIntExtra(PlayerService.POSITION_EXTRA, 0)));
                     }
                 }
             }
@@ -56,11 +61,15 @@ public class PlayerFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_player, container, false);
+        mPositionTextView = view.findViewById(R.id.positionTextView);
+        mPositionTextView.setText(String.valueOf(0));
+        mDurationTextView = view.findViewById(R.id.durationTextView);
+        mDurationTextView.setText(String.valueOf(0));
         mPlayerSeekBar = view.findViewById(R.id.playerSeekBar);
         mPlayerSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-
+                mPositionTextView.setText(String.valueOf(progress));
             }
 
             @Override
@@ -71,6 +80,7 @@ public class PlayerFragment extends Fragment {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 int progress = seekBar.getProgress();
+                mPositionTextView.setText(String.valueOf(seekBar.getProgress()));
                 getContext().startService(PlayerService.seekToIntent(getContext(), progress));
                 registerReceiver();
             }
@@ -99,6 +109,24 @@ public class PlayerFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 mPlayerServiceIntent.setAction(PlayerService.STOP_ACTION);
+                getContext().startService(mPlayerServiceIntent);
+            }
+        });
+
+        Button nextButton = view.findViewById(R.id.nextButton);
+        nextButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mPlayerServiceIntent.setAction(PlayerService.NEXT_ACTION);
+                getContext().startService(mPlayerServiceIntent);
+            }
+        });
+
+        Button previousButton = view.findViewById(R.id.previousButton);
+        previousButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mPlayerServiceIntent.setAction(PlayerService.PREVIOUS_ACTION);
                 getContext().startService(mPlayerServiceIntent);
             }
         });
