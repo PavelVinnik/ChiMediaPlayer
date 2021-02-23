@@ -17,6 +17,8 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import java.util.concurrent.TimeUnit;
+
 public class PlayerFragment extends Fragment {
 
     private static final String TAG = "PlayerFragment";
@@ -37,14 +39,16 @@ public class PlayerFragment extends Fragment {
             @Override
             public void onReceive(Context context, Intent intent) {
                 switch (intent.getAction()) {
-                    case PlayerService.ACTION_SEND_TRACK_DURATION: {
+                    case PlayerService.ACTION_BRODCAST_TRACK_DURATION: {
                         mPlayerSeekBar.setMax(intent.getIntExtra(PlayerService.DURATION_EXTRA, 0));
-                        mDurationTextView.setText(String.valueOf(intent.getIntExtra(PlayerService.DURATION_EXTRA, 0)));
+                        int duration = intent.getIntExtra(PlayerService.DURATION_EXTRA, 0);
+                        mDurationTextView.setText(formatMills(duration));
                         break;
                     }
-                    case PlayerService.ACTION_SEND_TRACK_POSITION: {
+                    case PlayerService.ACTION_BRODCAST_TRACK_POSITION: {
                         mPlayerSeekBar.setProgress(intent.getIntExtra(PlayerService.POSITION_EXTRA, 0));
-                        mPositionTextView.setText(String.valueOf(intent.getIntExtra(PlayerService.POSITION_EXTRA, 0)));
+                        int position = intent.getIntExtra(PlayerService.POSITION_EXTRA, 0);
+                        mPositionTextView.setText(formatMills(position));
                     }
                 }
             }
@@ -62,14 +66,14 @@ public class PlayerFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_player, container, false);
         mPositionTextView = view.findViewById(R.id.positionTextView);
-        mPositionTextView.setText(String.valueOf(0));
+        mPositionTextView.setText(formatMills(0));
         mDurationTextView = view.findViewById(R.id.durationTextView);
-        mDurationTextView.setText(String.valueOf(0));
+        mDurationTextView.setText(formatMills(0));
         mPlayerSeekBar = view.findViewById(R.id.playerSeekBar);
         mPlayerSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                mPositionTextView.setText(String.valueOf(progress));
+                mPositionTextView.setText(formatMills(progress));
             }
 
             @Override
@@ -80,7 +84,7 @@ public class PlayerFragment extends Fragment {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 int progress = seekBar.getProgress();
-                mPositionTextView.setText(String.valueOf(seekBar.getProgress()));
+                mPositionTextView.setText(formatMills(progress));
                 getContext().startService(PlayerService.seekToIntent(getContext(), progress));
                 registerReceiver();
             }
@@ -147,13 +151,21 @@ public class PlayerFragment extends Fragment {
 
     private void registerReceiver() {
         IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(PlayerService.ACTION_SEND_TRACK_DURATION);
-        intentFilter.addAction(PlayerService.ACTION_SEND_TRACK_POSITION);
+        intentFilter.addAction(PlayerService.ACTION_BRODCAST_TRACK_DURATION);
+        intentFilter.addAction(PlayerService.ACTION_BRODCAST_TRACK_POSITION);
         LocalBroadcastManager.getInstance(getContext()).registerReceiver(mPlayerReceiver, intentFilter);
     }
 
     private void unregisterReceiver() {
         LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(mPlayerReceiver);
+    }
+
+    private String formatMills(int mills) {
+        return String.format("%d : %d",
+                TimeUnit.MILLISECONDS.toMinutes(mills),
+                TimeUnit.MILLISECONDS.toSeconds(mills) -
+                        TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(mills))
+        );
     }
 
     public static PlayerFragment newInstance() {
