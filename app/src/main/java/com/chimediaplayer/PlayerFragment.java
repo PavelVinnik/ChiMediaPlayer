@@ -35,17 +35,18 @@ public class PlayerFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mPlayerServiceIntent = new Intent(getContext(), PlayerService.class);
+        getContext().startService(mPlayerServiceIntent);
         mPlayerReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 switch (intent.getAction()) {
-                    case PlayerService.ACTION_BRODCAST_TRACK_DURATION: {
+                    case PlayerService.ACTION_BROADCAST_TRACK_DURATION: {
                         mPlayerSeekBar.setMax(intent.getIntExtra(PlayerService.DURATION_EXTRA, 0));
                         int duration = intent.getIntExtra(PlayerService.DURATION_EXTRA, 0);
                         mDurationTextView.setText(formatMills(duration));
                         break;
                     }
-                    case PlayerService.ACTION_BRODCAST_TRACK_POSITION: {
+                    case PlayerService.ACTION_BROADCAST_TRACK_POSITION: {
                         mPlayerSeekBar.setProgress(intent.getIntExtra(PlayerService.POSITION_EXTRA, 0));
                         int position = intent.getIntExtra(PlayerService.POSITION_EXTRA, 0);
                         mPositionTextView.setText(formatMills(position));
@@ -151,8 +152,8 @@ public class PlayerFragment extends Fragment {
 
     private void registerReceiver() {
         IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(PlayerService.ACTION_BRODCAST_TRACK_DURATION);
-        intentFilter.addAction(PlayerService.ACTION_BRODCAST_TRACK_POSITION);
+        intentFilter.addAction(PlayerService.ACTION_BROADCAST_TRACK_DURATION);
+        intentFilter.addAction(PlayerService.ACTION_BROADCAST_TRACK_POSITION);
         LocalBroadcastManager.getInstance(getContext()).registerReceiver(mPlayerReceiver, intentFilter);
     }
 

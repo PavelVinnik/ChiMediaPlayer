@@ -14,7 +14,9 @@ public class MainActivity extends AppCompatActivity {
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
                     .setReorderingAllowed(true)
-                    .replace(R.id.container_main, PlayerFragment.newInstance())
+//                    .replace(R.id.container_main, PlayerFragment.newInstance())
+                    .replace(R.id.containerTempTop, PlayerFragment.newInstance())
+                    .replace(R.id.containerTempBottom, PlaylistFragment.newInstance())
                     .commit();
         }
     }
