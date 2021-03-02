@@ -149,7 +149,7 @@ public class PlayerFragment extends Fragment {
     }
 
     private String formatMills(int mills) {
-        return String.format("%d : %d",
+        return String.format("%02d : %02d",
                 TimeUnit.MILLISECONDS.toMinutes(mills),
                 TimeUnit.MILLISECONDS.toSeconds(mills) -
                         TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(mills))
