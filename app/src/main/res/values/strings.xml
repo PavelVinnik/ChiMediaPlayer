@@ -7,4 +7,6 @@
     <string name="previous_text">Previous</string>
     <string name="notification_channel_text">My channel</string>
     <string name="add_menu_item_title">Add</string>
+    <string name="tab_1_text">Player</string>
+    <string name="tab_2_text">Playlist</string>
 </resources>

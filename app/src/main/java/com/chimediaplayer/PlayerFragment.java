@@ -23,8 +23,6 @@ public class PlayerFragment extends Fragment {
 
     private static final String TAG = "PlayerFragment";
 
-    private Intent mPlayerServiceIntent;
-
     private TextView mPositionTextView;
     private TextView mDurationTextView;
     private SeekBar mPlayerSeekBar;
@@ -34,32 +32,24 @@ public class PlayerFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mPlayerServiceIntent = new Intent(getContext(), PlayerService.class);
-        getContext().startService(mPlayerServiceIntent);
         mPlayerReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 switch (intent.getAction()) {
-                    case PlayerService.ACTION_BROADCAST_TRACK_DURATION: {
-                        mPlayerSeekBar.setMax(intent.getIntExtra(PlayerService.DURATION_EXTRA, 0));
-                        int duration = intent.getIntExtra(PlayerService.DURATION_EXTRA, 0);
+                    case PlayerService.BROADCAST_TRACK_DURATION: {
+                        mPlayerSeekBar.setMax(intent.getIntExtra(PlayerService.EXTRA_DURATION, 0));
+                        int duration = intent.getIntExtra(PlayerService.EXTRA_DURATION, 0);
                         mDurationTextView.setText(formatMills(duration));
                         break;
                     }
-                    case PlayerService.ACTION_BROADCAST_TRACK_POSITION: {
-                        mPlayerSeekBar.setProgress(intent.getIntExtra(PlayerService.POSITION_EXTRA, 0));
-                        int position = intent.getIntExtra(PlayerService.POSITION_EXTRA, 0);
+                    case PlayerService.BROADCAST_TRACK_POSITION: {
+                        mPlayerSeekBar.setProgress(intent.getIntExtra(PlayerService.EXTRA_POSITION, 0));
+                        int position = intent.getIntExtra(PlayerService.EXTRA_POSITION, 0);
                         mPositionTextView.setText(formatMills(position));
                     }
                 }
             }
         };
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        registerReceiver();
     }
 
     @Nullable
@@ -95,8 +85,7 @@ public class PlayerFragment extends Fragment {
         playButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mPlayerServiceIntent.setAction(PlayerService.PLAY_ACTION);
-                getContext().startService(mPlayerServiceIntent);
+                getContext().startService(PlayerService.getActionIntent(getContext(), PlayerService.ACTION_PLAY));
             }
         });
 
@@ -104,8 +93,7 @@ public class PlayerFragment extends Fragment {
         pauseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mPlayerServiceIntent.setAction(PlayerService.PAUSE_ACTION);
-                getContext().startService(mPlayerServiceIntent);
+                getContext().startService(PlayerService.getActionIntent(getContext(), PlayerService.ACTION_PAUSE));
             }
         });
 
@@ -113,8 +101,7 @@ public class PlayerFragment extends Fragment {
         stopButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mPlayerServiceIntent.setAction(PlayerService.STOP_ACTION);
-                getContext().startService(mPlayerServiceIntent);
+                getContext().startService(PlayerService.getActionIntent(getContext(), PlayerService.ACTION_STOP));
             }
         });
 
@@ -122,8 +109,7 @@ public class PlayerFragment extends Fragment {
         nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mPlayerServiceIntent.setAction(PlayerService.NEXT_ACTION);
-                getContext().startService(mPlayerServiceIntent);
+                getContext().startService(PlayerService.getActionIntent(getContext(), PlayerService.ACTION_NEXT));
             }
         });
 
@@ -131,8 +117,7 @@ public class PlayerFragment extends Fragment {
         previousButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mPlayerServiceIntent.setAction(PlayerService.PREVIOUS_ACTION);
-                getContext().startService(mPlayerServiceIntent);
+                getContext().startService(PlayerService.getActionIntent(getContext(), PlayerService.ACTION_PREVIOUS));
             }
         });
 
@@ -140,20 +125,22 @@ public class PlayerFragment extends Fragment {
     }
 
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
+    public void onResume() {
+        super.onResume();
+        registerReceiver();
+        PlayerService.broadcastInfo(getContext());
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
+    public void onStop() {
+        super.onStop();
         unregisterReceiver();
     }
 
     private void registerReceiver() {
         IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(PlayerService.ACTION_BROADCAST_TRACK_DURATION);
-        intentFilter.addAction(PlayerService.ACTION_BROADCAST_TRACK_POSITION);
+        intentFilter.addAction(PlayerService.BROADCAST_TRACK_DURATION);
+        intentFilter.addAction(PlayerService.BROADCAST_TRACK_POSITION);
         LocalBroadcastManager.getInstance(getContext()).registerReceiver(mPlayerReceiver, intentFilter);
     }
 

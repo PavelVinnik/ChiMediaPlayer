@@ -3,20 +3,17 @@ package com.chimediaplayer;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListAdapter;
 
-import java.util.List;
 
-
-public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistViewHolder> {
+public class PlaylistAdapter extends ListAdapter<Song, PlaylistViewHolder> {
 
     private PlaylistViewHolder.Callback mCallback;
 
-    private List<Integer> mPlayList;
-
-    public PlaylistAdapter(PlaylistViewHolder.Callback callback, List<Integer> playList) {
+    public PlaylistAdapter(DiffUtil.ItemCallback<Song> diffCallback, PlaylistViewHolder.Callback callback) {
+        super(diffCallback);
         mCallback = callback;
-        mPlayList = playList;
     }
 
     @NonNull
@@ -27,11 +24,19 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull PlaylistViewHolder holder, int position) {
-        holder.onBind(mPlayList.get(position).toString());
+        holder.onBind(getItem(position).getTitle());
     }
 
-    @Override
-    public int getItemCount() {
-        return mPlayList.size();
+    static class SongDiff extends DiffUtil.ItemCallback<Song> {
+
+        @Override
+        public boolean areItemsTheSame(@NonNull Song oldItem, @NonNull Song newItem) {
+            return oldItem.getId() == newItem.getId();
+        }
+
+        @Override
+        public boolean areContentsTheSame(@NonNull Song oldItem, @NonNull Song newItem) {
+            return oldItem.getTitle().equals(newItem.getTitle());
+        }
     }
 }

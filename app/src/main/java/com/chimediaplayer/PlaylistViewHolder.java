@@ -24,13 +24,13 @@ public class PlaylistViewHolder extends RecyclerView.ViewHolder {
         mDeleteImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mCallback.deleteFromPlaylist(getAdapterPosition());
+                mCallback.deleteClick(getAdapterPosition());
             }
         });
         itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mCallback.holderClick(getAdapterPosition());
+                mCallback.viewClick(getAdapterPosition());
             }
         });
     }
@@ -45,8 +45,8 @@ public class PlaylistViewHolder extends RecyclerView.ViewHolder {
     }
 
     public interface Callback {
-        public void deleteFromPlaylist(int position);
+        public void deleteClick(int position);
 
-        public void holderClick(int position);
+        public void viewClick(int position);
     }
 }
