@@ -18,7 +18,7 @@
         android:layout_height="match_parent"
         android:background="@android:color/transparent"
         android:src="@drawable/ic_baseline_delete_24"
-        android:contentDescription="@string/delate_button_description_text" />
+        android:contentDescription="@string/delete_button_description_text" />
 
 
 </LinearLayout>
