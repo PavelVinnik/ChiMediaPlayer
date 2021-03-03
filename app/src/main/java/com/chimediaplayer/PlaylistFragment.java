@@ -43,7 +43,7 @@ public class PlaylistFragment extends Fragment implements PlaylistViewHolder.Cal
             public void onReceive(Context context, Intent intent) {
                 switch (intent.getAction()) {
                     case PlayerService.BROADCAST_PLAYLIST_STATE: {
-                        mFragmentPlaylist = new ArrayList<>((ArrayList<Song>) intent.getSerializableExtra(PlayerService.EXTRA_PLAYLIST));
+                        mFragmentPlaylist = new ArrayList<>(intent.getParcelableArrayListExtra(PlayerService.EXTRA_PLAYLIST));
                         mAdapter.submitList(mFragmentPlaylist);
                         mAdapter.notifyDataSetChanged();
                         break;

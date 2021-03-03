@@ -159,7 +159,7 @@ public class PlayerService extends Service implements MediaPlayer.OnCompletionLi
                     break;
                 }
                 case ACTION_UPDATE_PLAYLIST: {
-                    ArrayList<Song> receivedPlaylist = new ArrayList<>((ArrayList<Song>) intent.getSerializableExtra(EXTRA_PLAYLIST));
+                    ArrayList<Song> receivedPlaylist = new ArrayList<>(intent.getParcelableArrayListExtra(EXTRA_PLAYLIST));
                     if (receivedPlaylist.isEmpty()) {
                         mServicePlaylist = receivedPlaylist;
                         releaseAndNullMediaPlayer();
@@ -223,7 +223,7 @@ public class PlayerService extends Service implements MediaPlayer.OnCompletionLi
 
     private void broadcastPlaylistState(ArrayList<Song> playlistToFragment) {
         Intent playlistStateIntent = new Intent(BROADCAST_PLAYLIST_STATE);
-        playlistStateIntent.putExtra(EXTRA_PLAYLIST, playlistToFragment);
+        playlistStateIntent.putParcelableArrayListExtra(EXTRA_PLAYLIST, playlistToFragment);
         mLocalBroadcastManager.sendBroadcast(playlistStateIntent);
     }
 
@@ -253,7 +253,7 @@ public class PlayerService extends Service implements MediaPlayer.OnCompletionLi
     public static Intent getUpdatePlaylistIntent(Context context, ArrayList<Song> intentPlaylist) {
         Intent updatePlaylistIntent = new Intent(context, PlayerService.class);
         updatePlaylistIntent.setAction(ACTION_UPDATE_PLAYLIST);
-        updatePlaylistIntent.putExtra(EXTRA_PLAYLIST, intentPlaylist);
+        updatePlaylistIntent.putParcelableArrayListExtra(EXTRA_PLAYLIST, intentPlaylist);
         return updatePlaylistIntent;
     }
 

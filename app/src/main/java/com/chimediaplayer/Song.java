@@ -1,10 +1,12 @@
 package com.chimediaplayer;
 
-import java.io.Serializable;
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 
-public class Song implements Serializable {
+public class Song implements Parcelable {
 
     int mId;
     String mTitle;
@@ -13,6 +15,34 @@ public class Song implements Serializable {
         this.mId = id;
         this.mTitle = title;
     }
+
+    protected Song(Parcel in) {
+        mId = in.readInt();
+        mTitle = in.readString();
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(mId);
+        dest.writeString(mTitle);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    public static final Creator<Song> CREATOR = new Creator<Song>() {
+        @Override
+        public Song createFromParcel(Parcel in) {
+            return new Song(in);
+        }
+
+        @Override
+        public Song[] newArray(int size) {
+            return new Song[size];
+        }
+    };
 
     public int getId() {
         return mId;
