@@ -17,6 +17,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 public class PlayerFragment extends Fragment {
@@ -76,7 +77,7 @@ public class PlayerFragment extends Fragment {
             public void onStopTrackingTouch(SeekBar seekBar) {
                 int progress = seekBar.getProgress();
                 mPositionTextView.setText(formatMills(progress));
-                getContext().startService(PlayerService.seekToIntent(getContext(), progress));
+                getContext().startService(PlayerService.getSeekToIntent(getContext(), progress));
                 registerReceiver();
             }
         });
@@ -128,7 +129,7 @@ public class PlayerFragment extends Fragment {
     public void onResume() {
         super.onResume();
         registerReceiver();
-        PlayerService.broadcastInfo(getContext());
+        getContext().startService(PlayerService.getActionIntent(getContext(), PlayerService.ACTION_REPEAT_BROADCAST_INFO));
     }
 
     @Override
@@ -141,15 +142,15 @@ public class PlayerFragment extends Fragment {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(PlayerService.BROADCAST_TRACK_DURATION);
         intentFilter.addAction(PlayerService.BROADCAST_TRACK_POSITION);
-        LocalBroadcastManager.getInstance(getContext()).registerReceiver(mPlayerReceiver, intentFilter);
+        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(mPlayerReceiver, intentFilter);
     }
 
     private void unregisterReceiver() {
-        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(mPlayerReceiver);
+        LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(mPlayerReceiver);
     }
 
     private String formatMills(int mills) {
-        return String.format("%02d : %02d",
+        return String.format(Locale.getDefault(), "%02d : %02d",
                 TimeUnit.MILLISECONDS.toMinutes(mills),
                 TimeUnit.MILLISECONDS.toSeconds(mills) -
                         TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(mills))

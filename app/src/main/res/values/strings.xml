@@ -9,4 +9,5 @@
     <string name="add_menu_item_title">Add</string>
     <string name="tab_1_text">Player</string>
     <string name="tab_2_text">Playlist</string>
+    <string name="delate_button_description_text">Delate button.</string>
 </resources>

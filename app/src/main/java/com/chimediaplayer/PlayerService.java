@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.IBinder;
+import android.util.Log;
 import android.widget.RemoteViews;
 
 import androidx.annotation.Nullable;
@@ -40,7 +41,7 @@ public class PlayerService extends Service implements MediaPlayer.OnCompletionLi
 
     public static final String EXTRA_DURATION = "durationExtra";
     public static final String EXTRA_POSITION = "positionExtra";
-    public static final String EXTRA_PLAYLIST = "playlistExtraf";
+    public static final String EXTRA_PLAYLIST = "playlistExtra";
 
     private static final String EXTRA_SEEK_TO = "seekToExtra";
     private static final String EXTRA_SONG_POSITION = "songExtra";
@@ -54,7 +55,6 @@ public class PlayerService extends Service implements MediaPlayer.OnCompletionLi
 
     private ArrayList<Song> mServicePlaylist;
 
-
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -67,14 +67,6 @@ public class PlayerService extends Service implements MediaPlayer.OnCompletionLi
         mLocalBroadcastManager = LocalBroadcastManager.getInstance(this);
         mMediaPlayer = null;
         mServicePlaylist = new ArrayList<>();
-    }
-
-    private void releaseAndNullMediaPlayer() {
-        if (mMediaPlayer != null) {
-            mMediaPlayer.release();
-            mMediaPlayer = null;
-            broadcastResetUi();
-        }
     }
 
     @Override
@@ -160,33 +152,32 @@ public class PlayerService extends Service implements MediaPlayer.OnCompletionLi
                     }
                     break;
                 }
+                case ACTION_BROADCAST_PLAYLIST_STATE: {
+                    if (mServicePlaylist != null) {
+                        broadcastPlaylistState(mServicePlaylist);
+                    }
+                    break;
+                }
                 case ACTION_UPDATE_PLAYLIST: {
-                    ArrayList<Song> newPlaylist = new ArrayList<>((ArrayList<Song>) intent.getSerializableExtra(EXTRA_PLAYLIST));
-                    if (newPlaylist.isEmpty()) {
-                        mServicePlaylist = new ArrayList<>(newPlaylist);
+                    ArrayList<Song> receivedPlaylist = new ArrayList<>((ArrayList<Song>) intent.getSerializableExtra(EXTRA_PLAYLIST));
+                    if (receivedPlaylist.isEmpty()) {
+                        mServicePlaylist = receivedPlaylist;
                         releaseAndNullMediaPlayer();
-                        break;
                     }
                     if (mServicePlaylist == null) {
-                        mServicePlaylist = new ArrayList<>(newPlaylist);
+                        mServicePlaylist = receivedPlaylist;
                     }
-                    if (!mServicePlaylist.isEmpty() && mServicePlaylist.get(0).getId() != newPlaylist.get(0).getId()) {
+                    if (!mServicePlaylist.isEmpty() && mServicePlaylist.get(0).getId() != receivedPlaylist.get(0).getId()) {
                         releaseAndNullMediaPlayer();
-                        mServicePlaylist = new ArrayList<>(newPlaylist);
+                        mServicePlaylist = receivedPlaylist;
                         mMediaPlayer = MediaPlayer.create(this, mServicePlaylist.get(0).getId());
                         mMediaPlayer.setOnCompletionListener(this);
                         mMediaPlayer.start();
                         beginBroadcastInfo();
                     } else {
-                        mServicePlaylist = new ArrayList<>(newPlaylist);
+                        mServicePlaylist = receivedPlaylist;
                     }
                     broadcastPlaylistState(mServicePlaylist);
-                    break;
-                }
-                case ACTION_BROADCAST_PLAYLIST_STATE: {
-                    if (mServicePlaylist != null) {
-                        broadcastPlaylistState(mServicePlaylist);
-                    }
                     break;
                 }
             }
@@ -213,6 +204,14 @@ public class PlayerService extends Service implements MediaPlayer.OnCompletionLi
             mMediaPlayer.start();
             beginBroadcastInfo();
             broadcastPlaylistState(mServicePlaylist);
+        }
+    }
+
+    private void releaseAndNullMediaPlayer() {
+        if (mMediaPlayer != null) {
+            mMediaPlayer.release();
+            mMediaPlayer = null;
+            broadcastResetUi();
         }
     }
 
@@ -251,31 +250,25 @@ public class PlayerService extends Service implements MediaPlayer.OnCompletionLi
         return intent;
     }
 
-    public static Intent updatePlaylist(Context context, ArrayList<Song> intentPlaylist) {
+    public static Intent getUpdatePlaylistIntent(Context context, ArrayList<Song> intentPlaylist) {
         Intent updatePlaylistIntent = new Intent(context, PlayerService.class);
         updatePlaylistIntent.setAction(ACTION_UPDATE_PLAYLIST);
         updatePlaylistIntent.putExtra(EXTRA_PLAYLIST, intentPlaylist);
         return updatePlaylistIntent;
     }
 
-    public static Intent seekToIntent(Context context, int seekTo) {
+    public static Intent getSeekToIntent(Context context, int seekTo) {
         Intent seekToIntent = new Intent(context, PlayerService.class);
         seekToIntent.setAction(ACTION_SEEK_TO);
         seekToIntent.putExtra(EXTRA_SEEK_TO, seekTo);
         return seekToIntent;
     }
 
-    public static Intent playSongIntent(Context context, int position) {
+    public static Intent getPlaySongIntent(Context context, int position) {
         Intent playSongIntent = new Intent(context, PlayerService.class);
         playSongIntent.setAction(ACTION_PLAY_SONG);
         playSongIntent.putExtra(EXTRA_SONG_POSITION, position);
         return playSongIntent;
-    }
-
-    public static void broadcastInfo(Context context) {
-        Intent repeatBroadcastInfoIntent = new Intent(context, PlayerService.class);
-        repeatBroadcastInfoIntent.setAction(ACTION_REPEAT_BROADCAST_INFO);
-        context.startService(repeatBroadcastInfoIntent);
     }
 
     private Notification createNotification() {
@@ -332,14 +325,19 @@ public class PlayerService extends Service implements MediaPlayer.OnCompletionLi
         @Override
         public void run() {
             Intent sendPositionIntent = new Intent(BROADCAST_TRACK_POSITION);
-            while (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
-                sendPositionIntent.putExtra(EXTRA_POSITION, mMediaPlayer.getCurrentPosition());
-                mLocalBroadcastManager.sendBroadcast(sendPositionIntent);
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+            try {
+                while (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
+                    sendPositionIntent.putExtra(EXTRA_POSITION, mMediaPlayer.getCurrentPosition());
+                    mLocalBroadcastManager.sendBroadcast(sendPositionIntent);
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
+            } catch (IllegalStateException e) {
+                Log.e(TAG, "run: ", e);
+                mBroadcastPositionThread = null;
             }
         }
     }

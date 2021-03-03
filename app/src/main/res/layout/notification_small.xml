@@ -10,6 +10,7 @@
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
+        android:contentDescription="@string/previous_text"
         android:src="@drawable/ic_baseline_skip_previous_24" />
 
 
@@ -18,6 +19,7 @@
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
+        android:contentDescription="@string/play_text"
         android:src="@drawable/ic_baseline_play_arrow_24" />
 
     <ImageButton
@@ -25,6 +27,7 @@
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
+        android:contentDescription="@string/pause_text"
         android:src="@drawable/ic_baseline_pause_24" />
 
     <ImageButton
@@ -32,6 +35,7 @@
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
+        android:contentDescription="@string/stop_text"
         android:src="@drawable/ic_baseline_stop_24" />
 
     <ImageButton
@@ -39,6 +43,7 @@
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
+        android:contentDescription="@string/next_text"
         android:src="@drawable/ic_baseline_skip_next_24" />
 
 </LinearLayout>

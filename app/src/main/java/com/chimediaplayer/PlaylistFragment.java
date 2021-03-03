@@ -25,48 +25,44 @@ public class PlaylistFragment extends Fragment implements PlaylistViewHolder.Cal
 
     private static final String TAG = "PlaylistFragment";
 
-    private static final String SHARED_PREF = "SharedPref";
-    private static final String IS_FIRST_LAUNCH = "isFirstLaunch";
-
-    private RecyclerView mRecyclerView;
     private PlaylistAdapter mAdapter;
 
-    private ArrayList<Song> mFragmentPlayList;
-
     private BroadcastReceiver mPlaylistReceiver;
+
+    private ArrayList<Song> mFragmentPlaylist;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
 
-        mFragmentPlayList = Song.generateSongArrayList();
+        mFragmentPlaylist = Song.generateSongArrayList();
 
         mPlaylistReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 switch (intent.getAction()) {
                     case PlayerService.BROADCAST_PLAYLIST_STATE: {
-                        mFragmentPlayList = new ArrayList<>((ArrayList<Song>) intent.getSerializableExtra(PlayerService.EXTRA_PLAYLIST));
-                        mAdapter.submitList(mFragmentPlayList);
+                        mFragmentPlaylist = new ArrayList<>((ArrayList<Song>) intent.getSerializableExtra(PlayerService.EXTRA_PLAYLIST));
+                        mAdapter.submitList(mFragmentPlaylist);
                         mAdapter.notifyDataSetChanged();
                         break;
                     }
                 }
             }
         };
-        updatePlaylist(mFragmentPlayList);
+        updatePlaylist(mFragmentPlaylist);
     }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_playlist, container, false);
-        mRecyclerView = view.findViewById(R.id.playListRecyclerView);
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        RecyclerView recyclerView = view.findViewById(R.id.playListRecyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         mAdapter = new PlaylistAdapter(new PlaylistAdapter.SongDiff(), this);
-        mRecyclerView.setAdapter(mAdapter);
-        mAdapter.submitList(mFragmentPlayList);
+        recyclerView.setAdapter(mAdapter);
+        mAdapter.submitList(mFragmentPlaylist);
 
         return view;
     }
@@ -93,9 +89,9 @@ public class PlaylistFragment extends Fragment implements PlaylistViewHolder.Cal
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.addMenuItem: {
-                mFragmentPlayList.add(Song.getRandomSong());
-                mAdapter.submitList(mFragmentPlayList);
-                updatePlaylist(mFragmentPlayList);
+                mFragmentPlaylist.add(Song.getRandomSong());
+                mAdapter.submitList(mFragmentPlaylist);
+                updatePlaylist(mFragmentPlaylist);
                 return true;
             }
         }
@@ -103,7 +99,7 @@ public class PlaylistFragment extends Fragment implements PlaylistViewHolder.Cal
     }
 
     private void updatePlaylist(ArrayList<Song> playlistToService) {
-        getContext().startService(PlayerService.updatePlaylist(getContext(), playlistToService));
+        getContext().startService(PlayerService.getUpdatePlaylistIntent(getContext(), playlistToService));
     }
 
     public static PlaylistFragment newInstance() {
@@ -113,24 +109,24 @@ public class PlaylistFragment extends Fragment implements PlaylistViewHolder.Cal
     @Override
     public void deleteClick(int position) {
         if (position != -1) {
-            mFragmentPlayList.remove(position);
-            mAdapter.submitList(mFragmentPlayList);
-            updatePlaylist(mFragmentPlayList);
+            mFragmentPlaylist.remove(position);
+            mAdapter.submitList(mFragmentPlaylist);
+            updatePlaylist(mFragmentPlaylist);
         }
     }
 
     @Override
     public void viewClick(int position) {
-        getContext().startService(PlayerService.playSongIntent(getContext(), position));
+        getContext().startService(PlayerService.getPlaySongIntent(getContext(), position));
     }
 
     private void registerReceiver() {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(PlayerService.BROADCAST_PLAYLIST_STATE);
-        LocalBroadcastManager.getInstance(getContext()).registerReceiver(mPlaylistReceiver, intentFilter);
+        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(mPlaylistReceiver, intentFilter);
     }
 
     private void unregisterReceiver() {
-        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(mPlaylistReceiver);
+        LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(mPlaylistReceiver);
     }
 }

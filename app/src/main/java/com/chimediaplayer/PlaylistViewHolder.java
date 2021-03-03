@@ -12,7 +12,6 @@ import androidx.recyclerview.widget.RecyclerView;
 public class PlaylistViewHolder extends RecyclerView.ViewHolder {
 
     private TextView mSongTextView;
-    private ImageButton mDeleteImageButton;
 
     private Callback mCallback;
 
@@ -20,8 +19,8 @@ public class PlaylistViewHolder extends RecyclerView.ViewHolder {
         super(itemView);
         mCallback = callback;
         mSongTextView = itemView.findViewById(R.id.songTextView);
-        mDeleteImageButton = itemView.findViewById(R.id.deleteImageButton);
-        mDeleteImageButton.setOnClickListener(new View.OnClickListener() {
+        ImageButton deleteImageButton = itemView.findViewById(R.id.deleteImageButton);
+        deleteImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mCallback.deleteClick(getAdapterPosition());
@@ -45,8 +44,9 @@ public class PlaylistViewHolder extends RecyclerView.ViewHolder {
     }
 
     public interface Callback {
-        public void deleteClick(int position);
 
-        public void viewClick(int position);
+        void deleteClick(int position);
+
+        void viewClick(int position);
     }
 }
