@@ -159,7 +159,7 @@ public class PlayerService extends Service implements MediaPlayer.OnCompletionLi
                     break;
                 }
                 case ACTION_UPDATE_PLAYLIST: {
-                    ArrayList<Song> receivedPlaylist = new ArrayList<>(intent.getParcelableArrayListExtra(EXTRA_PLAYLIST));
+                    ArrayList<Song> receivedPlaylist = intent.getParcelableArrayListExtra(EXTRA_PLAYLIST);
                     if (receivedPlaylist.isEmpty()) {
                         mServicePlaylist = receivedPlaylist;
                         releaseAndNullMediaPlayer();
