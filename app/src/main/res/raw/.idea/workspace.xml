@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="7ee7424b-a971-4923-9968-376de3f7dbd4" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/../../java/com/chimediaplayer/MainPagerAdapter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../java/com/chimediaplayer/Song.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/_01fleshandbone.mp3" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/_02runaways.mp3" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/_03thewayitwas.mp3" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/_04herewithme.mp3" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/_05amatterooftime.mp3" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/_06deadlinesandcommitments.mp3" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/_07missatomicbomb.mp3" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/_08therisingtide.mp3" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/_09heartofagirl.mp3" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/_10fromhereonout.mp3" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/_11bestill.mp3" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/_12battleborn.mp3" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../java/com/chimediaplayer/MainActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../java/com/chimediaplayer/MainActivity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../java/com/chimediaplayer/PlayerFragment.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../java/com/chimediaplayer/PlayerFragment.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../java/com/chimediaplayer/PlayerService.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../java/com/chimediaplayer/PlayerService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../java/com/chimediaplayer/PlaylistAdapter.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../java/com/chimediaplayer/PlaylistAdapter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../java/com/chimediaplayer/PlaylistFragment.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../java/com/chimediaplayer/PlaylistFragment.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../java/com/chimediaplayer/PlaylistManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../java/com/chimediaplayer/PlaylistManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../java/com/chimediaplayer/PlaylistViewHolder.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../java/com/chimediaplayer/PlaylistViewHolder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../layout/activity_main.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../layout/activity_main.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../layout/list_item_playlist_item.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../layout/list_item_playlist_item.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/avalanche" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dance_macabre" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/its_sin" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../values/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../values/strings.xml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../../../../.." />
+  </component>
+  <component name="ProjectId" id="1pCFdrGrYGSs1CSH2UcWj5lwzcb" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="android.sdk.path" value="$USER_HOME$/AppData/Local/Android/Sdk" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="project.structure.last.edited" value="SDK Location" />
+    <property name="project.structure.proportion" value="0.17" />
+    <property name="project.structure.side.proportion" value="0.0" />
+    <property name="settings.editor.selected.configurable" value="dev.polek.adbwifi.settings.AdbWifiConfigurable" />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="7ee7424b-a971-4923-9968-376de3f7dbd4" name="Default Changelist" comment="" />
+      <created>1614679255270</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1614679255270</updated>
+    </task>
+    <servers />
+  </component>
+</project>

@@ -17,38 +17,43 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
 
 public class PlayerService extends Service implements MediaPlayer.OnCompletionListener {
 
     private static final String TAG = "PlayerService";
 
-    public static final String PLAY_ACTION = "playAction";
-    public static final String PAUSE_ACTION = "pauseAction";
-    public static final String STOP_ACTION = "stopAction";
-    public static final String NEXT_ACTION = "nextAction";
-    public static final String PREVIOUS_ACTION = "previousAction";
-    public static final String SEEK_TO_ACTION = "seekToAction";
+    public static final String ACTION_PLAY = "playAction";
+    public static final String ACTION_PAUSE = "pauseAction";
+    public static final String ACTION_STOP = "stopAction";
+    public static final String ACTION_NEXT = "nextAction";
+    public static final String ACTION_PREVIOUS = "previousAction";
+    public static final String ACTION_SEEK_TO = "seekToAction";
+    public static final String ACTION_PLAY_SONG = "playSongAction";
+    public static final String ACTION_UPDATE_PLAYLIST = "updatePlaylistAction";
+    public static final String ACTION_REPEAT_BROADCAST_INFO = "repeatBroadcastInfo";
+    public static final String ACTION_BROADCAST_PLAYLIST_STATE = "actionBroadcastPlaylistState";
 
-    public static final String ACTION_BRODCAST_TRACK_DURATION = "actionBrodcastTrackDuration";
-    public static final String ACTION_BRODCAST_TRACK_POSITION = "actionBrodcastTrackPosition";
+    public static final String BROADCAST_TRACK_DURATION = "broadcastTrackDuration";
+    public static final String BROADCAST_TRACK_POSITION = "broadcastTrackPosition";
+    public static final String BROADCAST_PLAYLIST_STATE = "broadcastPlaylistState";
 
-    public static final String DURATION_EXTRA = "durationExtra";
-    public static final String POSITION_EXTRA = "positionExtra";
+    public static final String EXTRA_DURATION = "durationExtra";
+    public static final String EXTRA_POSITION = "positionExtra";
+    public static final String EXTRA_PLAYLIST = "playlistExtra";
 
-    private static final String SEEK_TO_EXTRA = "seekToExtra";
+    private static final String EXTRA_SEEK_TO = "seekToExtra";
+    private static final String EXTRA_SONG_POSITION = "songExtra";
 
     private static final int NOTIFICATION_ID = 2342;
     private static final String NOTIFICATION_CHANEL_ID = "myNotificationChannel";
 
     private MediaPlayer mMediaPlayer;
     private LocalBroadcastManager mLocalBroadcastManager;
-    private List<Integer> mPlayList;
-    private int mCurrentTrackIndex;
-    private PositionUpdateThread mPositionUpdateThread;
-    private RemoteViews mNotificationView;
+    private broadcastPositionThread mBroadcastPositionThread;
+
+    private ArrayList<Song> mServicePlaylist;
 
     @Nullable
     @Override
@@ -59,167 +64,240 @@ public class PlayerService extends Service implements MediaPlayer.OnCompletionLi
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "onCreate: ");
         mLocalBroadcastManager = LocalBroadcastManager.getInstance(this);
-        mCurrentTrackIndex = 0;
-        mPlayList = getRawIdList();
-        mMediaPlayer = MediaPlayer.create(getBaseContext(), mPlayList.get(mCurrentTrackIndex));
-        mMediaPlayer.setOnCompletionListener(this);
-        mPositionUpdateThread = new PositionUpdateThread();
-        startForeground(NOTIFICATION_ID, createNotification());
-
+        mMediaPlayer = null;
+        mServicePlaylist = new ArrayList<>();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent.getAction() != null) {
             switch (intent.getAction()) {
-                case PLAY_ACTION: {
-                    if (!mMediaPlayer.isPlaying()) {
-                        startForeground(NOTIFICATION_ID, createNotification());
-                        mMediaPlayer.start();
-                        mMediaPlayer.setOnCompletionListener(this);
-                        sendDuration();
-                        if (!mPositionUpdateThread.isAlive()) {
-                            mPositionUpdateThread = new PositionUpdateThread();
-                            mPositionUpdateThread.start();
+                case ACTION_PLAY: {
+                    startForeground(NOTIFICATION_ID, createNotification());
+                    if (mServicePlaylist != null && !mServicePlaylist.isEmpty()) {
+                        if (mMediaPlayer == null) {
+                            mMediaPlayer = MediaPlayer.create(this, mServicePlaylist.get(0).getId());
+                            mMediaPlayer.setOnCompletionListener(this);
                         }
+                        mMediaPlayer.start();
+                        beginBroadcastInfo();
                     }
                     break;
                 }
-                case PAUSE_ACTION: {
-                    if (mMediaPlayer.isPlaying()) {
+                case ACTION_PAUSE: {
+                    if (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
                         mMediaPlayer.pause();
                     }
                     break;
                 }
-                case STOP_ACTION: {
-                    mMediaPlayer.release();
-                    mCurrentTrackIndex = 0;
-                    mMediaPlayer = MediaPlayer.create(getBaseContext(), mPlayList.get(mCurrentTrackIndex));
-                    resetUi();
+                case ACTION_STOP: {
+                    releaseAndNullMediaPlayer();
                     stopForeground(false);
                     break;
                 }
-                case NEXT_ACTION: {
-                    if (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
-                        if (mCurrentTrackIndex + 1 < mPlayList.size()) {
-                            mMediaPlayer.release();
-                            mCurrentTrackIndex++;
-                            resetUi();
-                            mMediaPlayer = MediaPlayer.create(getBaseContext(), mPlayList.get(mCurrentTrackIndex));
-                            mMediaPlayer.start();
-                            mMediaPlayer.setOnCompletionListener(this);
-                            sendDuration();
-                        }
-                    }
-                    break;
-                }
-                case PREVIOUS_ACTION: {
-                    if (mCurrentTrackIndex - 1 >= 0) {
-                        mMediaPlayer.release();
-                        mCurrentTrackIndex--;
-                        resetUi();
-                        mMediaPlayer = MediaPlayer.create(getBaseContext(), mPlayList.get(mCurrentTrackIndex));
-                        mMediaPlayer.start();
+                case ACTION_NEXT: {
+                    if (mServicePlaylist.size() > 1) {
+                        releaseAndNullMediaPlayer();
+                        Song tempSong = mServicePlaylist.get(0);
+                        mServicePlaylist.remove(0);
+                        mServicePlaylist.add(tempSong);
+                        mMediaPlayer = MediaPlayer.create(this, mServicePlaylist.get(0).getId());
                         mMediaPlayer.setOnCompletionListener(this);
-                        sendDuration();
+                        mMediaPlayer.start();
+                        beginBroadcastInfo();
+                        broadcastPlaylistState(mServicePlaylist);
                     }
                     break;
                 }
-                case SEEK_TO_ACTION: {
-                    mMediaPlayer.seekTo(intent.getIntExtra(SEEK_TO_EXTRA, 0));
+                case ACTION_PREVIOUS: {
+                    if (mServicePlaylist.size() > 1) {
+                        releaseAndNullMediaPlayer();
+                        mServicePlaylist.add(0, mServicePlaylist.get(mServicePlaylist.size() - 1));
+                        mServicePlaylist.remove(mServicePlaylist.size() - 1);
+                        mMediaPlayer = MediaPlayer.create(this, mServicePlaylist.get(0).getId());
+                        mMediaPlayer.setOnCompletionListener(this);
+                        mMediaPlayer.start();
+                        beginBroadcastInfo();
+                        broadcastPlaylistState(mServicePlaylist);
+                    }
+                    break;
+                }
+                case ACTION_SEEK_TO: {
+                    if (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
+                        mMediaPlayer.seekTo(intent.getIntExtra(EXTRA_SEEK_TO, 0));
+                    }
+                    break;
+                }
+                case ACTION_PLAY_SONG: {
+                    startForeground(NOTIFICATION_ID, createNotification());
+                    releaseAndNullMediaPlayer();
+                    int position = intent.getIntExtra(EXTRA_SONG_POSITION, -1);
+                    if (position > 0) {
+                        Collections.swap(mServicePlaylist, 0, position);
+                        Song song = mServicePlaylist.get(position);
+                        mServicePlaylist.remove(position);
+                        mServicePlaylist.add(song);
+                    }
+                    mMediaPlayer = MediaPlayer.create(this, mServicePlaylist.get(0).getId());
+                    mMediaPlayer.setOnCompletionListener(this);
+                    mMediaPlayer.start();
+                    beginBroadcastInfo();
+                    broadcastPlaylistState(mServicePlaylist);
+                    break;
+                }
+                case ACTION_REPEAT_BROADCAST_INFO: {
+                    if (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
+                        beginBroadcastInfo();
+                    }
+                    break;
+                }
+                case ACTION_BROADCAST_PLAYLIST_STATE: {
+                    if (mServicePlaylist != null) {
+                        broadcastPlaylistState(mServicePlaylist);
+                    }
+                    break;
+                }
+                case ACTION_UPDATE_PLAYLIST: {
+                    ArrayList<Song> receivedPlaylist = intent.getParcelableArrayListExtra(EXTRA_PLAYLIST);
+                    if (receivedPlaylist.isEmpty()) {
+                        mServicePlaylist = receivedPlaylist;
+                        releaseAndNullMediaPlayer();
+                    }
+                    if (mServicePlaylist == null) {
+                        mServicePlaylist = receivedPlaylist;
+                    }
+                    if (!mServicePlaylist.isEmpty() && mServicePlaylist.get(0).getId() != receivedPlaylist.get(0).getId()) {
+                        releaseAndNullMediaPlayer();
+                        mServicePlaylist = receivedPlaylist;
+                        mMediaPlayer = MediaPlayer.create(this, mServicePlaylist.get(0).getId());
+                        mMediaPlayer.setOnCompletionListener(this);
+                        mMediaPlayer.start();
+                        beginBroadcastInfo();
+                    } else {
+                        mServicePlaylist = receivedPlaylist;
+                    }
+                    broadcastPlaylistState(mServicePlaylist);
                     break;
                 }
             }
         }
-
         return START_STICKY;
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        mMediaPlayer.release();
-        Log.d(TAG, "onDestroy: ");
+        releaseAndNullMediaPlayer();
     }
 
     @Override
     public void onCompletion(MediaPlayer mp) {
         mp.release();
-        resetUi();
-        mCurrentTrackIndex++;
-        if (mCurrentTrackIndex >= mPlayList.size()) {
-            mCurrentTrackIndex = 0;
+        releaseAndNullMediaPlayer();
+        if (mServicePlaylist.size() > 1) {
+            Song tempSong = mServicePlaylist.get(0);
+            mServicePlaylist.remove(0);
+            mServicePlaylist.add(tempSong);
+            mMediaPlayer = MediaPlayer.create(this, mServicePlaylist.get(0).getId());
+            mMediaPlayer.setOnCompletionListener(this);
+            mMediaPlayer.start();
+            beginBroadcastInfo();
+            broadcastPlaylistState(mServicePlaylist);
         }
-        mMediaPlayer = MediaPlayer.create(getBaseContext(), mPlayList.get(mCurrentTrackIndex));
-        mMediaPlayer.setOnCompletionListener(this);
-        mMediaPlayer.start();
-        sendDuration();
     }
 
-    private void sendDuration() {
-        Intent sendDurationIntent = new Intent(ACTION_BRODCAST_TRACK_DURATION);
-        sendDurationIntent.putExtra(DURATION_EXTRA, mMediaPlayer.getDuration());
+    private void releaseAndNullMediaPlayer() {
+        if (mMediaPlayer != null) {
+            mMediaPlayer.release();
+            mMediaPlayer = null;
+            broadcastResetUi();
+        }
+    }
+
+    private void broadcastDuration() {
+        Intent sendDurationIntent = new Intent(BROADCAST_TRACK_DURATION);
+        sendDurationIntent.putExtra(EXTRA_DURATION, mMediaPlayer.getDuration());
         mLocalBroadcastManager.sendBroadcast(sendDurationIntent);
     }
 
-    private void resetUi() {
-        Intent sendDurationIntent = new Intent(ACTION_BRODCAST_TRACK_DURATION);
-        sendDurationIntent.putExtra(DURATION_EXTRA, 0);
+    private void broadcastPlaylistState(ArrayList<Song> playlistToFragment) {
+        Intent playlistStateIntent = new Intent(BROADCAST_PLAYLIST_STATE);
+        playlistStateIntent.putParcelableArrayListExtra(EXTRA_PLAYLIST, playlistToFragment);
+        mLocalBroadcastManager.sendBroadcast(playlistStateIntent);
+    }
+
+    private void beginBroadcastInfo() {
+        broadcastDuration();
+        if (mBroadcastPositionThread == null || !mBroadcastPositionThread.isAlive()) {
+            mBroadcastPositionThread = new broadcastPositionThread();
+            mBroadcastPositionThread.start();
+        }
+    }
+
+    private void broadcastResetUi() {
+        Intent sendDurationIntent = new Intent(BROADCAST_TRACK_DURATION);
+        sendDurationIntent.putExtra(EXTRA_DURATION, 0);
         mLocalBroadcastManager.sendBroadcast(sendDurationIntent);
-        Intent sendPositionIntent = new Intent(ACTION_BRODCAST_TRACK_POSITION);
-        sendPositionIntent.putExtra(POSITION_EXTRA, 0);
+        Intent sendPositionIntent = new Intent(BROADCAST_TRACK_POSITION);
+        sendPositionIntent.putExtra(EXTRA_POSITION, 0);
         mLocalBroadcastManager.sendBroadcast(sendPositionIntent);
     }
 
-    private List<Integer> getRawIdList() {
-        Field[] field = R.raw.class.getDeclaredFields();
-        List<Integer> rawIdList = new ArrayList<>();
-        for (Field item : field) {
-            try {
-                rawIdList.add(item.getInt(item));
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
-        }
-        return rawIdList;
+    public static Intent getActionIntent(Context context, String action) {
+        Intent intent = new Intent(context, PlayerService.class);
+        intent.setAction(action);
+        return intent;
     }
 
-    public static Intent seekToIntent(Context context, int seekTo) {
+    public static Intent getUpdatePlaylistIntent(Context context, ArrayList<Song> intentPlaylist) {
+        Intent updatePlaylistIntent = new Intent(context, PlayerService.class);
+        updatePlaylistIntent.setAction(ACTION_UPDATE_PLAYLIST);
+        updatePlaylistIntent.putParcelableArrayListExtra(EXTRA_PLAYLIST, intentPlaylist);
+        return updatePlaylistIntent;
+    }
+
+    public static Intent getSeekToIntent(Context context, int seekTo) {
         Intent seekToIntent = new Intent(context, PlayerService.class);
-        seekToIntent.setAction(SEEK_TO_ACTION);
-        seekToIntent.putExtra(SEEK_TO_EXTRA, seekTo);
+        seekToIntent.setAction(ACTION_SEEK_TO);
+        seekToIntent.putExtra(EXTRA_SEEK_TO, seekTo);
         return seekToIntent;
     }
 
+    public static Intent getPlaySongIntent(Context context, int position) {
+        Intent playSongIntent = new Intent(context, PlayerService.class);
+        playSongIntent.setAction(ACTION_PLAY_SONG);
+        playSongIntent.putExtra(EXTRA_SONG_POSITION, position);
+        return playSongIntent;
+    }
+
     private Notification createNotification() {
-        mNotificationView = new RemoteViews(getPackageName(), R.layout.notification_small);
+        RemoteViews notificationView = new RemoteViews(getPackageName(), R.layout.notification_small);
         Intent playIntent = new Intent(this, PlayerService.class);
-        playIntent.setAction(PLAY_ACTION);
-        PendingIntent playPending = PendingIntent.getService(this, 54, playIntent, 0);
-        mNotificationView.setOnClickPendingIntent(R.id.playNotificationButton, playPending);
+        playIntent.setAction(ACTION_PLAY);
+        Intent testIntent = new Intent(ACTION_PLAY, null, this, PlayerService.class);
+        PendingIntent playPending = PendingIntent.getService(this, 32, testIntent, 0);
+        notificationView.setOnClickPendingIntent(R.id.playNotificationButton, playPending);
 
         Intent pauseIntent = new Intent(this, PlayerService.class);
-        pauseIntent.setAction(PAUSE_ACTION);
+        pauseIntent.setAction(ACTION_PAUSE);
         PendingIntent pausePending = PendingIntent.getService(this, 32, pauseIntent, 0);
-        mNotificationView.setOnClickPendingIntent(R.id.pauseNotificationButton, pausePending);
+        notificationView.setOnClickPendingIntent(R.id.pauseNotificationButton, pausePending);
 
         Intent previousIntent = new Intent(this, PlayerService.class);
-        previousIntent.setAction(PREVIOUS_ACTION);
+        previousIntent.setAction(ACTION_PREVIOUS);
         PendingIntent previousPending = PendingIntent.getService(this, 32, previousIntent, 0);
-        mNotificationView.setOnClickPendingIntent(R.id.previousNotificationButton, previousPending);
+        notificationView.setOnClickPendingIntent(R.id.previousNotificationButton, previousPending);
 
         Intent stopIntent = new Intent(this, PlayerService.class);
-        stopIntent.setAction(STOP_ACTION);
+        stopIntent.setAction(ACTION_STOP);
         PendingIntent stopPending = PendingIntent.getService(this, 32, stopIntent, 0);
-        mNotificationView.setOnClickPendingIntent(R.id.stopNotificationButton, stopPending);
+        notificationView.setOnClickPendingIntent(R.id.stopNotificationButton, stopPending);
 
         Intent nextIntent = new Intent(this, PlayerService.class);
-        nextIntent.setAction(NEXT_ACTION);
+        nextIntent.setAction(ACTION_NEXT);
         PendingIntent nextPending = PendingIntent.getService(this, 32, nextIntent, 0);
-        mNotificationView.setOnClickPendingIntent(R.id.nextNotificationButton, nextPending);
-
+        notificationView.setOnClickPendingIntent(R.id.nextNotificationButton, nextPending);
 
         NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         NotificationCompat.Builder builder;
@@ -234,27 +312,32 @@ public class PlayerService extends Service implements MediaPlayer.OnCompletionLi
 
         Notification notification = builder
                 .setSmallIcon(R.drawable.ic_baseline_play_arrow_24)
-                //.setContentTitle(getResources().getString(R.string.app_name))
+                .setContentTitle(getResources().getString(R.string.app_name))
                 .setStyle(new NotificationCompat.DecoratedCustomViewStyle())
-                .setCustomContentView(mNotificationView)
+                .setCustomContentView(notificationView)
                 .setAutoCancel(false)
                 .build();
         return notification;
     }
 
-    private class PositionUpdateThread extends Thread {
+    private class broadcastPositionThread extends Thread {
 
         @Override
         public void run() {
-            Intent sendPositionIntent = new Intent(ACTION_BRODCAST_TRACK_POSITION);
-            while (mPlayList != null && mMediaPlayer.isPlaying()) {
-                sendPositionIntent.putExtra(POSITION_EXTRA, mMediaPlayer.getCurrentPosition());
-                mLocalBroadcastManager.sendBroadcast(sendPositionIntent);
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+            Intent sendPositionIntent = new Intent(BROADCAST_TRACK_POSITION);
+            try {
+                while (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
+                    sendPositionIntent.putExtra(EXTRA_POSITION, mMediaPlayer.getCurrentPosition());
+                    mLocalBroadcastManager.sendBroadcast(sendPositionIntent);
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
+            } catch (IllegalStateException e) {
+                Log.e(TAG, "run: ", e);
+                mBroadcastPositionThread = null;
             }
         }
     }
